@@ -11,11 +11,13 @@ const TRACKER_QUEUE = '' + process.env.TRACKER_QUEUE;
 
 
 const createTicket = async (update: Update) : Promise<TicketResponse> => {
-    console.log('TRACKER:', TRACKER_AUTH);
+    //console.log('TRACKER:', TRACKER_AUTH);
+    let summary = update.text.substring(1);
+    summary = summary.charAt(0).toUpperCase() + summary.slice(1);
 
     const req: TicketRequest = {
         queue: TRACKER_QUEUE,
-        summary: update.text.substring(1),
+        summary: summary,
         fname: update.text.substring(9),
         plate: ''
     };
