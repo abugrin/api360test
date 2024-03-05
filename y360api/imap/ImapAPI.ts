@@ -32,7 +32,7 @@ export default class ImapAPI {
         imap.once('ready', () => {
 
             console.log("Connected");
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            // @ts-expect-error err is any
             this.openInbox(imap, (err, box: Imap.Box) => {
                 const f = imap.seq.fetch(box.messages.total + ':*', {
                     bodies: ['HEADER.FIELDS (FROM)', 'HEADER.FIELDS (SUBJECT)', 'HEADER.FIELDS (X-Mailer)', 'TEXT'],
@@ -78,6 +78,7 @@ export default class ImapAPI {
 
     };
 
+    // @ts-expect-error callback function is any
     openInbox = (imap: Imap, cb) => {
         imap.openBox('INBOX', true, cb);
     };
