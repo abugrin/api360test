@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+input {
+    display:block;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+label {
+    font-size: small;
+    display:block;
+}
+
+textarea {
+    font-family: 'Courier New', Courier, monospace;
+}
