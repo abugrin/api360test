@@ -39,7 +39,7 @@ export const POST = async (req: Request): Promise<Response> => {
         console.log('Trying to recall message from', update.from.login, 'with subject', subject);
         SearchMail(update.from.login, subject).then(toList => {
           console.log(toList);
-          if (toList[0] !== 'notfound') {
+          if (toList.length > 0) {
             toList.forEach(async to => {
               const res = await DeleteMail(to, subject, update.from.login);
 
@@ -53,6 +53,8 @@ export const POST = async (req: Request): Promise<Response> => {
 
 
             });
+          } else {
+            chatAPI.sendMessage('Письмо не найдено в отправленных.', update);
           }
 
         });
