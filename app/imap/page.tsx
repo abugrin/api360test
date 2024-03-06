@@ -18,7 +18,15 @@ const Page = () => {
     const toList: string[] = await SearchMail(client_id, subject);
     console.log(toList);
     if (toList[0] !== 'notfound') {
-      toList.forEach(async to => {await DeleteMail(to, subject, client_id);});
+      toList.forEach(async to => {DeleteMail(to, subject, client_id).then(
+        res => {
+          if(res) {
+            console.log('Mail with subject', subject, 'deleted from', to, 'mailbox');
+          } else {
+            console.log('Mail with subject', subject, 'not found in', to, 'mailbox');
+          }
+        });
+      });
     }
 
   };

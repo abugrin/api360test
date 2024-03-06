@@ -9,6 +9,8 @@ const lastmail: email = {
 };
 
 let to: string[] = [];
+let deleted = false;
+let processed = false;
 
 
 export const TestImap = async (userId: string): Promise<email> => {
@@ -25,18 +27,29 @@ export const TestImap = async (userId: string): Promise<email> => {
 };
 
 
-export const DeleteMailBySubject = async (userId: string, subject: string, from: string) => {
+export const DeleteMailBySubject = async (userId: string, subject: string, from: string): Promise<boolean> => {
     console.log('Test IMAP Delete for:', userId);
     const imap = await prepareConnection(userId);
     imap.connect();
     await deleteMail(imap, subject, from);
+    let retries = 0;
+    while (!processed) {
+        console.log('Waiting for mail do be deleted...', userId);
+        retries++;
+        await new Promise(f => setTimeout(f, 200));
+        if (retries > 10) {
+            console.log('To much retries');
+            return deleted;
+        }
+    }
+    return deleted;
 };
 
 export const GetMailToBySubject = async (userId: string, subject: string): Promise<string> => {
     console.log('Test IMAP Search for:', userId);
     const imap = await prepareConnection(userId);
     imap.connect();
-    
+
     await searchSentMail(imap, subject);
     while (to.length < 1) {
         console.log('Waiting for mail...');
@@ -62,9 +75,9 @@ const deleteMail = async (imap: Imap, subject: string, from: string) => {
 const searchSentMail = async (imap: Imap, subject: string) => {
     imap.once('ready', () => {
         console.log("Connected for search");
-//        imap.getBoxes((err, boxes) => {
-//            console.log(inspect(boxes));
-//        });
+        //        imap.getBoxes((err, boxes) => {
+        //            console.log(inspect(boxes));
+        //        });
         openSent(imap, (err: Error, box: Imap.Box) => searchMessage(box, imap, subject));
 
     });
@@ -87,14 +100,14 @@ const deleteMessage = async (box: Imap.Box, imap: Imap, subject: string, from: s
                     bodies: ""
                     // markSeen: true
                 });
-                mails.once("end", () => imap.end());
+                mails.once("end", () => { processed = true; imap.end(); });
 
                 mails.on("message", (message, seq) => {
                     console.log("Message %d", seq);
                     message.on("body", stream => {
                         let buffer = "";
                         stream.on("data", chunk => (buffer += chunk.toString("utf8")));
-                        stream.once("end", () => imap.addFlags(uid, "Deleted", () => { imap.end(); }));
+                        stream.once("end", () => imap.addFlags(uid, "Deleted", () => { processed = true; deleted = true; imap.end(); }));
                     });
                 });
             }

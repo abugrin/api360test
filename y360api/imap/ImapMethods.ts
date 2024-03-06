@@ -11,11 +11,12 @@ export const TestConnection = async (userId: string): Promise<email> => {
     
 };
 
-export const DeleteMail = async (userId: string, subject: string, from: string) => {
+export const DeleteMail = async (userId: string, subject: string, from: string): Promise<boolean> => {
     
-    await DeleteMailBySubject(userId, subject, from);
-    console.log('Test Delete');
-   
+    console.log('Delete request Started for', userId);
+    const processed: boolean = await DeleteMailBySubject(userId, subject, from);
+    console.log('Delete request finished', userId, 'processed', processed);
+    return processed;
 };
 
 export const SearchMail = async (userId: string, subject: string): Promise<string[]> => {
