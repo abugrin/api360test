@@ -1,6 +1,7 @@
-import { BotChatAPI, type Update, type UpdateRequest } from '@/y360api/bot';
+import { BotChatAPI, ChatType, type Update, type UpdateRequest } from '@/y360api/bot';
 import { obscene } from '@/y360api/bot/types/obscene';
 import GPTAPI from '@/y360api/gpt/GPTAPI';
+import { DeleteMail, SearchMail } from '@/y360api/imap/ImapMethods';
 import createTicket from '@/y360api/tracker/TrackerAPI';
 import { lang } from '@/y360api/translate';
 import TranslateAPI from '@/y360api/translate/TranslateAPI';
@@ -33,6 +34,18 @@ export const POST = async (req: Request): Promise<Response> => {
             chatAPI.sendMessage('Создана задача в трекере: https://tracker.yandex.ru/' + result.key, update);
           }
         );
+      } else if (message.includes('/RECALL') && update.chat.type === ChatType.private) {
+        const subject = update.text.substring(8);
+        console.log('Trying to recall message from', update.from.login, 'with subject', subject);
+        SearchMail(update.from.login, subject).then(toList => {
+          console.log(toList);
+          if (toList[0] !== 'notfound') {
+            toList.forEach(async to => { await DeleteMail(to, subject, update.from.login); });
+          }
+
+        });
+
+
       } else if (message.includes('/GPT')) {
         const gptAPI = new GPTAPI();
         gptAPI.generateText('Ты умный ассистент', update.text.substring(5)).then(

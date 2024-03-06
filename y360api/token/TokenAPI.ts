@@ -5,9 +5,16 @@ import { ContentType, Method } from "@/y360api/types";
 
 const OAUTH_TOKEN_URL: string = 'https://oauth.yandex.ru/token';
 const GRANT_TYPE: string = 'urn:ietf:params:oauth:grant-type:token-exchange';
-const SUBJECT_TOKEN_TYPE: string = 'urn:yandex:params:oauth:token-type:uid';
+const SUBJECT_TOKEN_TYPE_UID: string = 'urn:yandex:params:oauth:token-type:uid';
+const SUBJECT_TOKEN_TYPE_EMAIL: string = 'urn:yandex:params:oauth:token-type:email';
 
 const requestToken = async (client_id: string, client_secret: string, subject_token: string): Promise<TokenResponse> => {
+    let SUBJECT_TOKEN_TYPE = SUBJECT_TOKEN_TYPE_UID;
+    if (subject_token.indexOf('@') > -1) {
+        SUBJECT_TOKEN_TYPE = SUBJECT_TOKEN_TYPE_EMAIL;
+    }
+
+
     const details = [
         { key: 'grant_type', value: GRANT_TYPE },
         { key: 'client_id', value: client_id },

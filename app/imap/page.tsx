@@ -3,7 +3,8 @@
 import { FormEvent, useState } from "react";
 import { Button, Col, Container, Form, Row } from "react-bootstrap";
 import React from 'react';
-import { TestConnection } from "@/y360api/imap/TestConnection";
+import { SearchMail, DeleteMail } from "@/y360api/imap/ImapMethods";
+
 
 
 const Page = () => {
@@ -11,21 +12,29 @@ const Page = () => {
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    TestConnection(client_id);
-
+    //const mail:email = await TestConnection(client_id);
+    //setToken('Subject:\n' + mail.subject + '\nBody:\n' + mail.body);
+    //await TestDeleteMessage(client_id, subject, from);
+    const toList: string[] = await SearchMail(client_id, subject);
+    console.log(toList);
+    if (toList[0] !== 'notfound') {
+      toList.forEach(async to => {await DeleteMail(to, subject, client_id);});
+    }
 
   };
 
 
 
   const [client_id, setClientId] = useState('');
+  const [subject, setSubject] = useState('');
+  const [from, setFrom] = useState('');
   const [token, setToken] = useState('');
   const [error_description, setError] = useState('Ready');
   
   return (
     <Container fluid className="flex-row p-6">
       <Row className="mb-5 w-full">
-      <Col className="font-bold">Hello! Let&apos;s generate token!</Col>
+      <Col className="font-bold">Hello! Let&apos;s test IMAP!</Col>
       </Row>
       <Row>
         <Col>
@@ -45,7 +54,7 @@ const Page = () => {
         </Row>
         <Row className="mb-3">
           <Col className="mb-3 w-full">
-            <Form.Label htmlFor={'client_id'}>client_id: </Form.Label>
+            <Form.Label htmlFor={'client_id'}>Удалить у Email: </Form.Label>
             <Form.Control
               className="w-96"
               type='text'
@@ -56,8 +65,32 @@ const Page = () => {
           </Col>
         </Row>
         <Row className="mb-3">
+          <Col className="mb-3 w-full">
+            <Form.Label htmlFor={'from'}>Письмо от Email: </Form.Label>
+            <Form.Control
+              className="w-96"
+              type='text'
+              placeholder=''
+              id='from'
+              value={from}
+              onChange={event => setFrom(event.target.value)} />
+          </Col>
+        </Row>
+        <Row className="mb-3">
+          <Col className="mb-3 w-full">
+            <Form.Label htmlFor={'subject'}>Тема: </Form.Label>
+            <Form.Control
+              className="w-96"
+              type='text'
+              placeholder=''
+              id='subject'
+              value={subject}
+              onChange={event => setSubject(event.target.value)} />
+          </Col>
+        </Row>
+        <Row className="mb-3">
           <Col>
-            <Form.Label htmlFor={'token'}>Token:</Form.Label>
+            <Form.Label htmlFor={'token'}>Response:</Form.Label>
             <Form.Control
               as='textarea'
               rows={5}
