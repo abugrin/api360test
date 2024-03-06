@@ -40,18 +40,18 @@ export const POST = async (req: Request): Promise<Response> => {
         SearchMail(update.from.login, subject).then(toList => {
           console.log(toList);
           if (toList[0] !== 'notfound') {
-            toList.forEach(async to => { 
-              DeleteMail(to, subject, update.from.login).then(
-                res => {
-                  if(res) {
-                    console.log('Mail with subject', subject, 'deleted from', to, 'mailbox');
-                    chatAPI.sendMessage('Письмо для ' + to + ' - удалено', update);
-                  } else {
-                    console.log('Mail with subject', subject, 'not found in', to, 'mailbox');
-                    chatAPI.sendMessage('Письмо для ' + to + ' - ошибка удаления', update);
-                  }
-                }
-              ); 
+            toList.forEach(async to => {
+              const res = await DeleteMail(to, subject, update.from.login);
+
+              if (res) {
+                console.log('Mail with subject', subject, 'deleted from', to, 'mailbox');
+                chatAPI.sendMessage('Письмо для ' + to + ' - удалено', update);
+              } else {
+                console.log('Mail with subject', subject, 'not found in', to, 'mailbox');
+                chatAPI.sendMessage('Письмо для ' + to + ' - ошибка удаления', update);
+              }
+
+
             });
           }
 
