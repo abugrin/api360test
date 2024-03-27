@@ -10,6 +10,7 @@ const chatAPI = new BotChatAPI('OAuth ' + process.env.BOT_KEY);
 
 export const POST = async (req: Request): Promise<Response> => {
   const requestJson: UpdateRequest = await req.json();
+  console.log('Post request recieved');
 
   requestJson.updates.forEach(update => {
     console.log('Update: ', update);
