@@ -2,6 +2,7 @@ import { BotChatAPI, ChatType, type Update, type UpdateRequest } from '@/y360api
 import { obscene } from '@/y360api/bot/types/obscene';
 import GPTAPI from '@/y360api/gpt/GPTAPI';
 import { DeleteMail, SearchMail } from '@/y360api/imap/ImapMethods';
+import { createMeeting } from '@/y360api/telemost/TelemostAPI';
 import createTicket from '@/y360api/tracker/TrackerAPI';
 import { lang } from '@/y360api/translate';
 import TranslateAPI from '@/y360api/translate/TranslateAPI';
@@ -22,8 +23,8 @@ export const POST = async (req: Request): Promise<Response> => {
         chatAPI.sendMessage('Я всё вижу! \u{1F440}', update);
       } else if (message === '/HELP') {
         chatAPI.sendMessage(
-          'Доступные команды:\n- /hellobot - проверить работу бота.\n- /п в ответ на сообщение - перевод на русский.\n- /t в ответ на сообщение - перевод на английский. \n- /пропуск ФИО - создать задачу в трекере.'
-          , update);
+          'Доступные команды:\n- /hellobot - проверить работу бота.\n- /п в ответ на сообщение - перевод на русский.\n- /t в ответ на сообщение - перевод на английский. \n- /пропуск ФИО - создать задачу в трекере. \n- /gpt запрос - сгенерировать текст по теме запроса через Yandex GPT',
+          update);
       } else if (message === '/П') {
         translate(update, lang.ru);
       } else if (message === '/T') {
@@ -35,6 +36,14 @@ export const POST = async (req: Request): Promise<Response> => {
             chatAPI.sendMessage('Создана задача в трекере: https://tracker.yandex.ru/' + result.key, update);
           }
         );
+      } else if (message === '/ВСТРЕЧА') {
+        createMeeting().then(
+            result => {
+              console.log('Meeting created', result);
+              chatAPI.sendMessage('Создана встреча: ' + result, update);
+            }
+          );
+
       } else if (message.includes('/RECALL') && update.chat.type === ChatType.private) {
         const subject = update.text.substring(8);
         console.log('Trying to recall message from', update.from.login, 'with subject', subject);
