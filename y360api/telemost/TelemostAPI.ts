@@ -3,7 +3,7 @@
 import { ContentType, Method } from "../types";
 import { TelemostRequest, TelemostResponse } from "./TelemostTypes";
 
-const TELEMOST_API_URL = 'https://cloud-api.yandex.net/v1/telemost-api/';
+const TELEMOST_API_URL = 'https://cloud-api.yandex.net/v1/telemost-api';
 const TELEMOST_AUTH = 'OAuth ' + process.env.TELEMOST_KEY;
 
 export const createMeeting = async () : Promise<string> => {
