@@ -78,8 +78,4 @@ export class BotChatAPI {
         return res;
          
     };
-
 }
-
-
-

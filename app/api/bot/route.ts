@@ -6,6 +6,7 @@ import { createMeeting } from '@/y360api/telemost/TelemostAPI';
 import createTicket from '@/y360api/tracker/TrackerAPI';
 import { lang } from '@/y360api/translate';
 import TranslateAPI from '@/y360api/translate/TranslateAPI';
+import fs from 'fs';
 
 const chatAPI = new BotChatAPI('OAuth ' + process.env.BOT_KEY);
 
@@ -78,7 +79,15 @@ export const POST = async (req: Request): Promise<Response> => {
             chatAPI.sendMessage(res.result.alternatives[0].message.text, update);
           }
         );
-      } else if (obscene.some(v => message.includes(v))) {
+      } else if (message.includes('/ART')) {
+        const gptAPI = new GPTAPI();
+        gptAPI.generateArt(update.text.substring(5)).then(
+          operation_id => {
+                console.log("Requesting operation result");
+                requestOperationResult(operation_id, update, gptAPI, chatAPI);
+            }
+        );
+      }else if (obscene.some(v => message.includes(v))) {
         chatAPI.deleteMessage(update);
         chatAPI.sendMessage('Сообщение пользователя ' + update.from.display_name + ' удалено.', update);
       }
@@ -87,7 +96,6 @@ export const POST = async (req: Request): Promise<Response> => {
 
   return Response.json('OK');
 };
-
 
 const translate = (update: Update, language: lang) => {
   if (update.reply_to_message) {
@@ -104,4 +112,27 @@ const translate = (update: Update, language: lang) => {
       }
     );
   }
+};
+
+const requestOperationResult = async (operation_id: string, update: Update, gptAPI: GPTAPI, chatAPI: BotChatAPI) => {
+  const res = gptAPI.getArtOperation(operation_id);
+  const timeOut = new Promise((resolve) => {
+    setTimeout(resolve, 10000, 'Timeout done');
+  });
+
+  Promise.all([res, timeOut]).then(imageResponse => { 
+    
+    console.log("Atleast 10 secs + TTL (Network/server)");
+    console.log("Response: " + imageResponse[0].done);
+    if (!imageResponse[0].done) {
+      console.log("Retry get operation result");
+      requestOperationResult(operation_id, update, gptAPI, chatAPI);
+    } else {
+      console.log("Operation done");
+      //chatAPI.sendMessage(`Operation complete ${operation_id}`, update);
+      fs.writeFileSync(`./public/generated/${operation_id}.jpg`, imageResponse[0].response.image, 'base64');
+      const hostName = process.env.HOST;
+      chatAPI.sendMessage(`${hostName}/generated/${operation_id}.jpg`, update);
+    }
+  });
 };

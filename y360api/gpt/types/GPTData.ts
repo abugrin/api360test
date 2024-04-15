@@ -4,6 +4,22 @@ export interface TextGenerationRequest {
     messages: Message[];
 }
 
+export interface ImageGenerationRequest {
+    modelUri: string;
+    messages: ImageMessage[];
+    generation_options: GenerationOptions;
+}
+
+export interface ImageGenerationResponse {
+    id: string;
+    description: string;
+    createdAt: string;
+    createdBy: string;
+    modifiedAt: string;
+    done: boolean;
+    response: ImageResponse;
+}
+
 export interface TextGenerationResponse {
     result: Result;
 }
@@ -11,6 +27,16 @@ export interface TextGenerationResponse {
 export interface Message {
     role: Role;
     text: string;
+}
+
+export interface ImageMessage {
+    text: string;
+    weight: number;
+}
+
+export interface GenerationOptions {
+    mime_type: MimeType;
+    seed: number;
 }
 
 export interface CompletionOptions {
@@ -36,8 +62,18 @@ export interface Alternative {
     status: string;
 }
 
+export interface ImageResponse {
+    "@type": string;
+    image: string;
+    modelVersion: string;
+  }
+
 export enum Role {
     system = 'system',
     user = 'user',
     assistant = 'assistant'
+}
+
+export enum MimeType {
+    jpeg = 'image/jpeg'
 }
