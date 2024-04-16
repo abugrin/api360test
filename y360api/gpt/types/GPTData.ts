@@ -18,6 +18,8 @@ export interface ImageGenerationResponse {
     modifiedAt: string;
     done: boolean;
     response: ImageResponse;
+    error?: string;
+    message?: string;
 }
 
 export interface TextGenerationResponse {

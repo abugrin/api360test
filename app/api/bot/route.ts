@@ -90,9 +90,14 @@ export const POST = async (req: Request): Promise<Response> => {
         const gptAPI = new GPTAPI();
         chatAPI.sendMessage('Принят запрос на генерацию картинки.', update);
         gptAPI.generateArt(update.text.substring(5)).then(
-          operation_id => {
+          res => {
                 console.log("Requesting operation result");
-                requestOperationResult(operation_id, update, gptAPI, chatAPI);
+                if(res.id) {
+                  requestOperationResult(res.id, update, gptAPI, chatAPI);
+                }
+                else {
+                  chatAPI.sendMessage('Не удалось выполнить операцию:\n' + res.message, update);
+                }
             }
         );
 

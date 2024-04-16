@@ -82,7 +82,7 @@ export default class GPTAPI {
         return json;
     };
 
-    generateArt = async (text: string): Promise<string> => {
+    generateArt = async (text: string): Promise<ImageGenerationResponse> => {
         const data = {
             method: Method.POST,
             headers: this.headers,
@@ -115,7 +115,7 @@ export default class GPTAPI {
         const json: ImageGenerationResponse = await res.json();
         console.log('ART Response:', json);
 
-        return json.id;
+        return json;
 
     };
 
