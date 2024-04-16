@@ -130,7 +130,8 @@ export default class GPTAPI {
 
         const res = await fetch(`${GPT_PATH}/operations/${operation_id}`, data);
         const json: ImageGenerationResponse = await res.json();
-        console.log('ART Response:', json);
+        console.log('ART Response Id: ', json.id);
+        console.log('ART Response done: ', json.done);
         return json;
     };
 }

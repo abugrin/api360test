@@ -6,7 +6,6 @@ import { createMeeting } from '@/y360api/telemost/TelemostAPI';
 import createTicket from '@/y360api/tracker/TrackerAPI';
 import { lang } from '@/y360api/translate';
 import TranslateAPI from '@/y360api/translate/TranslateAPI';
-import fs from 'fs';
 
 const chatAPI = new BotChatAPI('OAuth ' + process.env.BOT_KEY);
 
@@ -23,9 +22,11 @@ export const POST = async (req: Request): Promise<Response> => {
       if (message === '/HELLOBOT') {
         chatAPI.sendMessage('Я всё вижу! \u{1F440}', update);
       } else if (message === '/HELP') {
-        chatAPI.sendMessage(
-          'Доступные команды:\n- /hellobot - проверить работу бота.\n- /п в ответ на сообщение - перевод на русский.\n- /t в ответ на сообщение - перевод на английский. \n- /пропуск ФИО - создать задачу в трекере. \n- /gpt запрос - сгенерировать текст по теме запроса через Yandex GPT',
-          update);
+        let helpText = "";
+        helpText += 'Доступные команды:\n- /hellobot - проверить работу бота.\n- /п в ответ на сообщение - перевод на русский.\n';
+        helpText += '- /t в ответ на сообщение - перевод на английский. \n- /пропуск ФИО - создать задачу в трекере. \n- /gpt запрос - сгенерировать текст по теме запроса через Yandex GPT';
+        helpText += '\n- /art запрос - сгенерировать изображение по теме запроса через Yandex ART';
+        chatAPI.sendMessage(helpText, update);
       } else if (message === '/П') {
         translate(update, lang.ru);
       } else if (message === '/T') {
@@ -47,7 +48,7 @@ export const POST = async (req: Request): Promise<Response> => {
 
       } else if (message.includes('/RECALL') && update.chat.type === ChatType.private) {
         const subject = update.text.substring(8);
-        console.log('Trying to recall message from', update.from.login, 'with subject', subject);
+        console.log('Trying to recall mimage: string, update: Updateessage from', update.from.login, 'with subject', subject);
         SearchMail(update.from.login, subject).then(toList => {
           console.log(toList);
           if (toList.length > 0) {
@@ -87,7 +88,8 @@ export const POST = async (req: Request): Promise<Response> => {
                 requestOperationResult(operation_id, update, gptAPI, chatAPI);
             }
         );
-      }else if (obscene.some(v => message.includes(v))) {
+
+      } else if (obscene.some(v => message.includes(v))) {
         chatAPI.deleteMessage(update);
         chatAPI.sendMessage('Сообщение пользователя ' + update.from.display_name + ' удалено.', update);
       }
@@ -122,17 +124,17 @@ const requestOperationResult = async (operation_id: string, update: Update, gptA
 
   Promise.all([res, timeOut]).then(imageResponse => { 
     
-    console.log("Atleast 10 secs + TTL (Network/server)");
-    console.log("Response: " + imageResponse[0].done);
+    console.log("Wait for 10 secs + TTL");
+    console.log("Operation complete: " + imageResponse[0].done);
     if (!imageResponse[0].done) {
       console.log("Retry get operation result");
       requestOperationResult(operation_id, update, gptAPI, chatAPI);
     } else {
-      console.log("Operation done");
-      //chatAPI.sendMessage(`Operation complete ${operation_id}`, update);
-      fs.writeFileSync(`./public/generated/${operation_id}.jpg`, imageResponse[0].response.image, 'base64');
-      const hostName = process.env.HOST;
-      chatAPI.sendMessage(`${hostName}/generated/${operation_id}.jpg`, update);
+     
+      //fs.writeFileSync(`./public/generated/${operation_id}.jpg`, imageResponse[0].response.image, 'base64');
+      //const hostName = process.env.HOST;
+      //chatAPI.sendMessage(`${hostName}/generated/${operation_id}.jpg`, update);
+      chatAPI.sendImage(imageResponse[0].response.image, update);
     }
   });
 };

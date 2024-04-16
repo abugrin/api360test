@@ -78,4 +78,46 @@ export class BotChatAPI {
         return res;
          
     };
+
+    sendImage = async (imageBuffer: string, update: Update)  => {
+        /*fs.readFile('./public/generated/fbvfplp1b7cmdgtqn48c.jpg', data => {
+            console.log('Data: ', data);
+        });*/
+        const form_data = new FormData();
+        const image_file = new Blob([Buffer.from(imageBuffer,"base64")]);
+        console.log(image_file);
+        //form_data.append('login', 'abugrin@myandex360.ru');
+        
+        if (update.chat.thread_id) {
+            form_data.append('thread_id', update.chat.thread_id.toString());
+        }
+
+        if (update.chat.type === ChatType.group) {
+            form_data.append('chat_id', update.chat.id);
+            
+        } else {
+            form_data.append('login', update.from.login);
+        }
+
+        form_data.append('image', image_file, 'generated.jpg');
+
+        const req = {
+            method: Method.POST,
+            headers: {
+                'Authorization': this.botAuth,
+                //'Content-Type':'multipart/form-data'
+            },
+            body: form_data,
+            next: {
+                revalidate: 0
+            }
+        };
+
+        //console.log(req);
+
+        const res = await fetch(BOT_API_URL + '/bot/v1/messages/sendImage', req);
+        console.log(await res.json());
+        
+
+    };
 }
