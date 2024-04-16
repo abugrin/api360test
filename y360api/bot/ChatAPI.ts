@@ -41,11 +41,11 @@ export class BotChatAPI {
         } else {
             send.login = update.from.login;
         }
-        
+        console.log('Send message to: ', send);
         this.data.body = JSON.stringify(send);
-        const res = fetch(BOT_API_URL + '/bot/v1/messages/sendText', this.data);
+        const res = await fetch(BOT_API_URL + '/bot/v1/messages/sendText', this.data);
         
-        log(await (await res).json());
+        log(await res.json());
         return res;
          
     };
