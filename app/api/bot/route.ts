@@ -23,9 +23,14 @@ export const POST = async (req: Request): Promise<Response> => {
         chatAPI.sendMessage('Я всё вижу! \u{1F440}', update);
       } else if (message === '/HELP') {
         let helpText = "";
-        helpText += 'Доступные команды:\n- /hellobot - проверить работу бота.\n- /п в ответ на сообщение - перевод на русский.\n';
-        helpText += '- /t в ответ на сообщение - перевод на английский. \n- /пропуск ФИО - создать задачу в трекере. \n- /gpt запрос - сгенерировать текст по теме запроса через Yandex GPT';
-        helpText += '\n- /art запрос - сгенерировать изображение по теме запроса через Yandex ART';
+        helpText += 'Доступные команды:';
+        helpText += '\n- /hellobot - проверить работу бота.';
+        helpText += '\n- /п в ответ на сообщение - перевод на русский.';
+        helpText += '\n- /t в ответ на сообщение - перевод на английский.';
+        helpText += '\n- /пропуск ФИО - создать задачу в трекере.';
+        helpText += '\n- /встреча - создать встречу в Телемосте.';
+        helpText += '\n- /gpt запрос - сгенерировать текст по теме запроса через YandexGPT.';
+        helpText += '\n- /art запрос - сгенерировать изображение по теме запроса через YandexART.';
         chatAPI.sendMessage(helpText, update);
       } else if (message === '/П') {
         translate(update, lang.ru);
@@ -74,6 +79,7 @@ export const POST = async (req: Request): Promise<Response> => {
 
       } else if (message.includes('/GPT')) {
         const gptAPI = new GPTAPI();
+        chatAPI.sendMessage('Принят запрос на генерацию текста.', update);
         gptAPI.generateText('Ты умный ассистент', update.text.substring(5)).then(
           res => {
             console.log(res.result.alternatives[0].message.text);
@@ -82,6 +88,7 @@ export const POST = async (req: Request): Promise<Response> => {
         );
       } else if (message.includes('/ART')) {
         const gptAPI = new GPTAPI();
+        chatAPI.sendMessage('Принят запрос на генерацию картинки.', update);
         gptAPI.generateArt(update.text.substring(5)).then(
           operation_id => {
                 console.log("Requesting operation result");
