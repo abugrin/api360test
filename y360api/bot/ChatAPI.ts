@@ -28,7 +28,8 @@ export class BotChatAPI {
 
     sendMessage = async (text: string, update: Update) : Promise<Response> => {
         const send: Send = {
-            text: text
+            text: text,
+            disable_web_page_preview: true
         };
 
         if (update.chat.thread_id) {
