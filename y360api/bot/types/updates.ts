@@ -9,7 +9,9 @@ export interface Update {
     from: From,
     update_id: number,
     text: string,
-    reply_to_message?: Update
+    reply_to_message?: Update,
+    callback_data?: CallbackData
+
 }
 
 export interface Chat {
@@ -28,5 +30,9 @@ export interface From {
 export enum ChatType {
     group = 'group',
     private = 'private'
+}
+
+export interface CallbackData {
+    cmd?: string
 }
 

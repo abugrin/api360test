@@ -1,6 +1,7 @@
 import { log } from "console";
 import { ChatType, Delete, Send, Update } from ".";
 import { ContentType, Method } from "@/y360api/types";
+import { Button } from "./types/button";
 
 const BOT_API_URL = 'https://botapi.messenger.yandex.net';
 
@@ -24,14 +25,7 @@ export class BotChatAPI {
         };
     }
 
-    
-
-    sendMessage = async (text: string, update: Update) : Promise<Response> => {
-        const send: Send = {
-            text: text,
-            disable_web_page_preview: true
-        };
-
+    postMessage = async (send: Send, update: Update) : Promise<Response> => {
         if (update.chat.thread_id) {
             send.thread_id = update.chat.thread_id;
         }
@@ -42,12 +36,21 @@ export class BotChatAPI {
         } else {
             send.login = update.from.login;
         }
-        console.log('Send message to: ', send);
+        console.log('Send message to: ', JSON.stringify(send));
         this.data.body = JSON.stringify(send);
         const res = await fetch(BOT_API_URL + '/bot/v1/messages/sendText', this.data);
         
         log(await res.json());
         return res;
+    };
+
+    sendMessage = async (text: string, update: Update) : Promise<Response> => {
+        const send: Send = {
+            text: text,
+            disable_web_page_preview: true
+        };
+
+        return this.postMessage(send, update);
          
     };
 
@@ -66,18 +69,13 @@ export class BotChatAPI {
         
     };
 
-    sendInlineMessage = async (text: string, update: Update) : Promise<Response> => {
+    sendInlineKeyboard = async (text: string, buttons: Button[], update: Update) : Promise<Response> => {
         const send: Send = {
-            chat_id: update.chat.id,
-            text: text
+            text: text,
+            inline_keyboard: buttons
         };
-        
-        this.data.body = JSON.stringify(send);
-        
-        const res = fetch(BOT_API_URL + '/bot/v1/messages/sendText', this.data);
-     
-        return res;
-         
+
+        return this.postMessage(send, update);
     };
 
     sendImage = async (imageBuffer: string, update: Update)  => {
