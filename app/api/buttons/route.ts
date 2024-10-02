@@ -66,8 +66,6 @@ export const POST = async (req: Request): Promise<Response> => {
       } else if (command === '/help') {
         let helpText = "";
         helpText += 'Доступные команды:';
-        helpText += '\n- /п в ответ на сообщение - перевод на русский.';
-        helpText += '\n- /t в ответ на сообщение - перевод на английский.';
         helpText += '\n- /пропуск ФИО - создать задачу в трекере.';
         helpText += '\n- /встреча - создать встречу в Телемосте.';
         helpText += '\n- /gpt запрос - сгенерировать текст по теме запроса через YandexGPT.';
@@ -83,17 +81,11 @@ export const POST = async (req: Request): Promise<Response> => {
         if (translate_requested) {
           redis.del(update.from.id);
           translate(update, lang.ru);
+          chatAPI.sendInlineKeyboard('Доступные команды', main_menu, update);
         } else {
           const message = update.text.toUpperCase();
           if (message === '/HELLOBOT') {
-            chatAPI.sendMessage('Я всё вижу! \u{1F440}', update).then(
-              () => {
-                chatAPI.sendInlineKeyboard('Доступные команды', main_menu, update);
-              });
-          } else if (message === '/П') {
-            translate(update, lang.ru);
-          } else if (message === '/T') {
-            translate(update, lang.en);
+            chatAPI.sendInlineKeyboard('Доступные команды', main_menu, update);
           } else if (message.includes('/ПРОПУСК')) {
             createTicket(update).then(
               result => {
