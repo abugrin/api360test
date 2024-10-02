@@ -5,8 +5,20 @@ import { createMeeting } from '@/y360api/telemost/TelemostAPI';
 import createTicket from '@/y360api/tracker/TrackerAPI';
 import { lang } from '@/y360api/translate';
 import TranslateAPI from '@/y360api/translate/TranslateAPI';
+import Redis from "ioredis";
 
 const chatAPI = new BotChatAPI('OAuth ' + process.env.BOT_KEY);
+process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = '0';
+const redis = new Redis(
+  {
+    host: "service.org.myandex360.ru",
+    port: 6379,
+    password: "Craft01!",
+    db: 0,
+  }
+);
+
+
 const main_menu = [
   {
     text: 'Приветствие',
@@ -34,6 +46,9 @@ export const POST = async (req: Request): Promise<Response> => {
   const requestJson: UpdateRequest = await req.json();
   console.log('Post request recieved');
 
+  console.log(await redis.ping());
+
+
   requestJson.updates.forEach(update => {
     console.log('Update: ', update);
 
@@ -46,7 +61,9 @@ export const POST = async (req: Request): Promise<Response> => {
             chatAPI.sendInlineKeyboard('Доступные команды', main_menu, update);
           }
         );
-        
+      } else if (command === '/translate') {
+        redis.set(update.from.id, update.from.login);
+        chatAPI.sendMessage('Введите текст для перевода', update);
       } else if (command === '/help') {
         let helpText = "";
         helpText += 'Доступные команды:';
@@ -59,55 +76,67 @@ export const POST = async (req: Request): Promise<Response> => {
         chatAPI.sendMessage(helpText, update);
       }
     } else if (update.text) {
-      const message = update.text.toUpperCase();
-      if (message === '/П') {
-        translate(update, lang.ru);
-      } else if (message === '/T') {
-        translate(update, lang.en);
-      } else if (message.includes('/ПРОПУСК')) {
-        createTicket(update).then(
-          result => {
-            console.log('Ticket created', result.id);
-            chatAPI.sendMessage('Создана задача в трекере: https://tracker.yandex.ru/' + result.key, update);
-          }
-        );
-      } else if (message === '/ВСТРЕЧА') {
-        createMeeting().then(
-          result => {
-            console.log('Meeting created', result);
-            chatAPI.sendMessage('Создана встреча: ' + result, update);
-          }
-        );
+      let translate_requested = false;
+      redis.get(update.from.id).then(res => {
+        console.log('Redis response: ', res);
+        if (res) translate_requested = true;
+        console.log('Is translate requested: ', translate_requested);
+        if (translate_requested) {
+          redis.del(update.from.id);
+          translate(update, lang.ru);
+        } else {
+          const message = update.text.toUpperCase();
+          if (message === '/П') {
+            translate(update, lang.ru);
+          } else if (message === '/T') {
+            translate(update, lang.en);
+          } else if (message.includes('/ПРОПУСК')) {
+            createTicket(update).then(
+              result => {
+                console.log('Ticket created', result.id);
+                chatAPI.sendMessage('Создана задача в трекере: https://tracker.yandex.ru/' + result.key, update);
+              }
+            );
+          } else if (message === '/ВСТРЕЧА') {
+            createMeeting().then(
+              result => {
+                console.log('Meeting created', result);
+                chatAPI.sendMessage('Создана встреча: ' + result, update);
+              }
+            );
 
 
-      } else if (message.includes('/GPT')) {
-        const gptAPI = new GPTAPI();
-        chatAPI.sendMessage('Принят запрос на генерацию текста.', update);
-        gptAPI.generateText('Ты умный ассистент', update.text.substring(5)).then(
-          res => {
-            console.log(res.result.alternatives[0].message.text);
-            chatAPI.sendMessage(res.result.alternatives[0].message.text, update);
-          }
-        );
-      } else if (message.includes('/ART')) {
-        const gptAPI = new GPTAPI();
-        chatAPI.sendMessage('Принят запрос на генерацию картинки.', update);
-        gptAPI.generateArt(update.text.substring(5)).then(
-          res => {
-            console.log("Requesting operation result");
-            if (res.id) {
-              requestOperationResult(res.id, update, gptAPI, chatAPI);
-            }
-            else {
-              chatAPI.sendMessage('Не удалось выполнить операцию:\n' + res.message, update);
-            }
-          }
-        );
+          } else if (message.includes('/GPT')) {
+            const gptAPI = new GPTAPI();
+            chatAPI.sendMessage('Принят запрос на генерацию текста.', update);
+            gptAPI.generateText('Ты умный ассистент', update.text.substring(5)).then(
+              res => {
+                console.log(res.result.alternatives[0].message.text);
+                chatAPI.sendMessage(res.result.alternatives[0].message.text, update);
+              }
+            );
+          } else if (message.includes('/ART')) {
+            const gptAPI = new GPTAPI();
+            chatAPI.sendMessage('Принят запрос на генерацию картинки.', update);
+            gptAPI.generateArt(update.text.substring(5)).then(
+              res => {
+                console.log("Requesting operation result");
+                if (res.id) {
+                  requestOperationResult(res.id, update, gptAPI, chatAPI);
+                }
+                else {
+                  chatAPI.sendMessage('Не удалось выполнить операцию:\n' + res.message, update);
+                }
+              }
+            );
 
-      } else if (obscene.some(v => message.includes(v))) {
-        chatAPI.deleteMessage(update);
-        chatAPI.sendMessage('Сообщение пользователя ' + update.from.display_name + ' удалено.', update);
-      }
+          } else if (obscene.some(v => message.includes(v))) {
+            chatAPI.deleteMessage(update);
+            chatAPI.sendMessage('Сообщение пользователя ' + update.from.display_name + ' удалено.', update);
+          }
+        }
+      });
+
     }
   });
 
@@ -116,15 +145,15 @@ export const POST = async (req: Request): Promise<Response> => {
 
 const translate = (update: Update, language: lang) => {
   if (update.reply_to_message) {
-    console.log('Translating: ', update.reply_to_message.text);
+    console.log('Translating: ', update.text);
     const translateAPI = new TranslateAPI();
-    translateAPI.translateText(update.reply_to_message.text, language).then(
+    translateAPI.translateText(update.text, language).then(
       respText => {
         console.log('Response Text ', respText);
         if (language === lang.ru) {
-          chatAPI.sendMessage('Пользователь ' + update.reply_to_message?.from.display_name + ' написал: ' + respText, update);
+          chatAPI.sendMessage('Перевод ' + respText, update);
         } else if (language === lang.en) {
-          chatAPI.sendMessage('User ' + update.reply_to_message?.from.display_name + ' sent: ' + respText, update);
+          chatAPI.sendMessage('Translateion ' + respText, update);
         }
       }
     );
