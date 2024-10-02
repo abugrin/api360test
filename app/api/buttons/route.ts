@@ -80,8 +80,8 @@ export const POST = async (req: Request): Promise<Response> => {
         console.log('Is translate requested: ', translate_requested);
         if (translate_requested) {
           redis.del(update.from.id);
-          translate(update, lang.ru);
-          chatAPI.sendInlineKeyboard('Доступные команды', main_menu, update);
+          translate(update, lang.ru).then(() => chatAPI.sendInlineKeyboard('Доступные команды', main_menu, update));
+          
         } else {
           const message = update.text.toUpperCase();
           if (message === '/HELLOBOT') {
@@ -139,7 +139,7 @@ export const POST = async (req: Request): Promise<Response> => {
   return Response.json('OK');
 };
 
-const translate = (update: Update, language: lang) => {
+const translate = async (update: Update, language: lang) => {
   if (update.text) {
     console.log('Translating: ', update.text);
     const translateAPI = new TranslateAPI();
