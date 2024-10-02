@@ -139,21 +139,18 @@ export const POST = async (req: Request): Promise<Response> => {
   return Response.json('OK');
 };
 
-const translate = async (update: Update, language: lang) => {
-  if (update.text) {
+const translate = async (update: Update, language: lang) : Promise<string> => {
+
     console.log('Translating: ', update.text);
     const translateAPI = new TranslateAPI();
-    translateAPI.translateText(update.text, language).then(
-      respText => {
-        console.log('Response Text ', respText);
-        if (language === lang.ru) {
-          chatAPI.sendMessage('Перевод ' + respText, update);
-        } else if (language === lang.en) {
-          chatAPI.sendMessage('Translateion ' + respText, update);
-        }
-      }
-    );
-  }
+    const respText = await translateAPI.translateText(update.text, language);
+    console.log('Response Text ', respText);
+    if (language === lang.ru) {
+      chatAPI.sendMessage('Перевод ' + respText, update);
+    } else if (language === lang.en) {
+      chatAPI.sendMessage('Translateion ' + respText, update);
+    }
+    return respText;
 };
 
 const requestOperationResult = async (operation_id: string, update: Update, gptAPI: GPTAPI, chatAPI: BotChatAPI) => {
