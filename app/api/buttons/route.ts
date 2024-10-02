@@ -148,7 +148,7 @@ export const POST = async (req: Request): Promise<Response> => {
 };
 
 const translate = (update: Update, language: lang) => {
-  if (update.reply_to_message) {
+  if (update.text) {
     console.log('Translating: ', update.text);
     const translateAPI = new TranslateAPI();
     translateAPI.translateText(update.text, language).then(
