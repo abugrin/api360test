@@ -8,12 +8,11 @@ import TranslateAPI from '@/y360api/translate/TranslateAPI';
 import Redis from "ioredis";
 
 const chatAPI = new BotChatAPI('OAuth ' + process.env.BOT_KEY);
-process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = '0';
 const redis = new Redis(
   {
-    host: "service.org.myandex360.ru",
+    host: process.env.REDIS_HOST,
     port: 6379,
-    password: "Craft01!",
+    password: process.env.REDIS_PASS,
     db: 0,
   }
 );
@@ -86,7 +85,12 @@ export const POST = async (req: Request): Promise<Response> => {
           translate(update, lang.ru);
         } else {
           const message = update.text.toUpperCase();
-          if (message === '/П') {
+          if (message === '/HELLOBOT') {
+            chatAPI.sendMessage('Я всё вижу! \u{1F440}', update).then(
+              () => {
+                chatAPI.sendInlineKeyboard('Доступные команды', main_menu, update);
+              });
+          } else if (message === '/П') {
             translate(update, lang.ru);
           } else if (message === '/T') {
             translate(update, lang.en);
