@@ -63,8 +63,9 @@ const processCommand = (command: string, update: Update) => {
 const processTranslate = (update: Update)=> {
     redis.del(update.from.id);
     translate(update).then(text => {
-      chatAPI.sendMessage('Перевод ' + text, update);
-      chatAPI.sendInlineKeyboard('Доступные команды', menuMain, update);
+      chatAPI.sendMessage('Перевод ' + text, update).then(
+        () => chatAPI.sendInlineKeyboard('Доступные команды', menuMain, update)
+      );
     });
 };
 
