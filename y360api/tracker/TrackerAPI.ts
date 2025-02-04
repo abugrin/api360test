@@ -17,9 +17,9 @@ const createTicket = async (update: Update) : Promise<TicketResponse> => {
 
     const req: TicketRequest = {
         queue: TRACKER_QUEUE,
-        summary: summary,
-        fname: update.text.substring(9),
-        plate: ''
+        summary: summary
+        //fname: update.text.substring(9),
+        //plate: ''
     };
 
     const org_id = process.env.TRACKER_ORG ? process.env.TRACKER_ORG : '';
