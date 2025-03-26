@@ -1,12 +1,13 @@
 import { BotChatAPI, type Update, type UpdateRequest } from '@/y360api/bot';
-import { obscene } from '@/y360api/bot/types/obscene';
-import GPTAPI from '@/y360api/gpt/GPTAPI';
-import { createMeeting } from '@/y360api/telemost/TelemostAPI';
-import createTicket from '@/y360api/tracker/TrackerAPI';
-import Redis from "ioredis";
-import { menuMain, translate } from './bot';
+//import { obscene } from '@/y360api/bot/types/obscene';
+//import GPTAPI from '@/y360api/gpt/GPTAPI';
+//import { createMeeting } from '@/y360api/telemost/TelemostAPI';
+//import createTicket from '@/y360api/tracker/TrackerAPI';
+//import Redis from "ioredis";
+import { menuMain } from './bot';
 
 const chatAPI = new BotChatAPI('OAuth ' + process.env.BOT_KEY);
+/*
 const redis = new Redis(
   {
     host: process.env.REDIS_HOST,
@@ -15,12 +16,12 @@ const redis = new Redis(
     db: 0,
   }
 );
-
+*/
 export const POST = async (req: Request): Promise<Response> => {
   const requestJson: UpdateRequest = await req.json();
   console.log('Post request recieved');
 
-  console.log(await redis.ping());
+  //console.log(await redis.ping());
 
 
   requestJson.updates.forEach(update => {
@@ -29,10 +30,11 @@ export const POST = async (req: Request): Promise<Response> => {
     if (update.callback_data?.cmd) {
       processCommand(update.callback_data.cmd, update);
     } else if (update.text) {
+      /*
       redis.get(update.from.id).then(res => {
         if (res) processTranslate(update);
         else processText(update);
-      });
+      });*/
     }
   });
 
@@ -47,7 +49,7 @@ const processCommand = (command: string, update: Update) => {
       }
     );
   } else if (command === '/translate') {
-    redis.set(update.from.id, update.from.login);
+    //redis.set(update.from.id, update.from.login);
     chatAPI.sendMessage('Введите текст для перевода', update);
   } else if (command === '/help') {
     let helpText = "";
@@ -59,7 +61,7 @@ const processCommand = (command: string, update: Update) => {
     chatAPI.sendMessage(helpText, update);
   }
 };
-
+/*
 const processTranslate = (update: Update)=> {
     redis.del(update.from.id);
     translate(update).then(text => {
@@ -120,7 +122,9 @@ const processText = (update: Update) => {
   }
 };
 
+*/
 
+/*
 const requestOperationResult = async (operation_id: string, update: Update, gptAPI: GPTAPI, chatAPI: BotChatAPI) => {
   const res = gptAPI.getArtOperation(operation_id);
   const timeOut = new Promise((resolve) => {
@@ -142,4 +146,4 @@ const requestOperationResult = async (operation_id: string, update: Update, gptA
       chatAPI.sendImage(imageResponse[0].response.image, update);
     }
   });
-};
+};*/
